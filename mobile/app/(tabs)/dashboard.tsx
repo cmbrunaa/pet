@@ -6,401 +6,434 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Alert
+  Alert,
 } from "react-native";
 
-import {
-  useEffect,
-  useState
-} from "react";
+import { useEffect, useState } from "react";
+
+import { Ionicons } from "@expo/vector-icons";
 
 import {
   getEstatisticas,
-  getPesoAtual
+  getPesoAtual,
 } from "../../src/services/dashboardService";
 
-import {
-  getRecomendacaoIA
-} from "../../src/services/iaService";
+import { getRecomendacaoIA } from "../../src/services/iaService";
 
-import {
-  liberarRacao
-} from "../../src/services/alimentadorService";
+import { liberarRacao } from "../../src/services/alimentadorService";
 
 export default function Dashboard() {
+  const [estatisticas, setEstatisticas] = useState<any>(null);
 
-  const [estatisticas,setEstatisticas] =
-    useState<any>(null);
+  const [peso, setPeso] = useState<number>(0);
 
-  const [peso,setPeso] =
-    useState<number>(0);
+  const [ia, setIa] = useState<any>(null);
 
-  const [ia,setIa] =
-    useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [loading,setLoading] =
-    useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [refreshing,setRefreshing] =
-    useState(false);
-
-  useEffect(()=>{
-
+  useEffect(() => {
     carregarDados();
+  }, []);
 
-  },[]);
+  async function carregarDados() {
+    try {
+      const stats = await getEstatisticas();
 
-  async function carregarDados(){
+      const pesoAtual = await getPesoAtual();
 
-    try{
-
-      const stats =
-        await getEstatisticas();
-
-      const pesoAtual =
-        await getPesoAtual();
-
-      const recomendacaoIA =
-        await getRecomendacaoIA();
+      const recomendacaoIA = await getRecomendacaoIA();
 
       setEstatisticas(stats);
       setPeso(pesoAtual);
       setIa(recomendacaoIA);
-
-    }catch(error){
-
+    } catch (error) {
       console.log(error);
-
-    }finally{
-
+    } finally {
       setLoading(false);
-
     }
-
   }
 
-  async function atualizar(){
-
+  async function atualizar() {
     setRefreshing(true);
 
     await carregarDados();
 
     setRefreshing(false);
-
   }
 
-  // 🚨 STATUS BASEADO EM PESO
-
-  function obterStatusPeso(){
-
-    if(peso <= 0){
-
+  function obterStatusPeso() {
+    if (peso <= 0) {
       return {
-        texto:"Sem ração",
-        cor:"#ff3b30"
+        texto: "Sem ração",
+        cor: "#E74C3C",
+        icon: "close-circle-outline" as const,
       };
-
     }
 
-    if(peso <= 100){
-
+    if (peso <= 100) {
       return {
-        texto:"Baixo",
-        cor:"#ff9500"
+        texto: "Baixo",
+        cor: "#F39C12",
+        icon: "alert-circle-outline" as const,
       };
-
     }
 
-    if(peso >= 300){
-
+    if (peso >= 300) {
       return {
-        texto:"Cheio",
-        cor:"#007aff"
+        texto: "Cheio",
+        cor: "#5DADE2",
+        icon: "checkmark-circle-outline" as const,
       };
-
     }
 
     return {
-      texto:"Normal",
-      cor:"#34c759"
+      texto: "Normal",
+      cor: "#2ECC71",
+      icon: "checkmark-done-circle-outline" as const,
     };
-
   }
 
-  // 🤖 BOTÃO IA
-
-  async function alimentarComIA(){
-
-    try{
-
-      if(!ia?.recomendacao){
-
-        Alert.alert(
-          "Aviso",
-          "Sem recomendação disponível"
-        );
+  async function alimentarComIA() {
+    try {
+      if (!ia?.recomendacao) {
+        Alert.alert("Aviso", "Sem recomendação disponível");
 
         return;
-
       }
 
-      await liberarRacao(
-        ia.recomendacao
-      );
+      await liberarRacao(ia.recomendacao);
 
-      Alert.alert(
-        "Sucesso",
-        `🐶 Alimentado com ${ia.recomendacao}g`
-      );
+      Alert.alert("Sucesso", `Alimentado com ${ia.recomendacao}g`);
 
       carregarDados();
-
-    }catch(error){
-
-      Alert.alert(
-        "Erro",
-        "Falha ao alimentar"
-      );
-
+    } catch (error) {
+      Alert.alert("Erro", "Falha ao alimentar");
     }
-
   }
 
-  if(loading){
-
-    return(
-
+  if (loading) {
+    return (
       <View style={styles.center}>
-
-        <ActivityIndicator size="large"/>
-
+        <ActivityIndicator size="large" color="#7B3FA1" />
       </View>
-
     );
-
   }
 
-  const status =
-    obterStatusPeso();
+  const status = obterStatusPeso();
 
-  return(
-
+  return (
     <ScrollView
       style={styles.container}
+      showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={atualizar}
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={atualizar} />
       }
     >
+      <View style={styles.header}>
+        <Text style={styles.appTitle}>Dashboard</Text>
 
-      {/* STATUS */}
+        <Text style={styles.appSubtitle}>
+          Acompanhe o consumo e o status do alimentador
+        </Text>
+      </View>
 
       <View
         style={[
           styles.statusBox,
           {
-            backgroundColor:
-              status.cor
-          }
+            backgroundColor: status.cor,
+          },
         ]}
       >
+        <View style={styles.statusContent}>
+          <Ionicons name={status.icon} size={23} color="#fff" />
 
-        <Text style={styles.statusText}>
-          {status.texto}
-        </Text>
-
+          <Text style={styles.statusText}>Status: {status.texto}</Text>
+        </View>
       </View>
-
-      {/* GRID */}
 
       <View style={styles.grid}>
-
         <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="scale-outline" size={20} color="#7B3FA1" />
 
-          <Text style={styles.cardTitle}>
-            Peso
-          </Text>
+            <Text style={styles.cardTitle}>Peso atual</Text>
+          </View>
 
-          <Text style={styles.value}>
-            {peso} g
-          </Text>
+          <Text style={styles.value}>{peso} g</Text>
 
+          <View style={styles.progressBarBackground}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.min((peso / 500) * 100, 100)}%`,
+                },
+              ]}
+            />
+          </View>
         </View>
 
         <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="analytics-outline" size={20} color="#7B3FA1" />
 
-          <Text style={styles.cardTitle}>
-            Média diária
-          </Text>
+            <Text style={styles.cardTitle}>Média diária</Text>
+          </View>
 
-          <Text style={styles.value}>
-            {estatisticas?.mediaDiaria ?? 0} g
-          </Text>
+          <Text style={styles.value}>{estatisticas?.mediaDiaria ?? 0} g</Text>
 
+          <View style={styles.progressBarBackground}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.min(
+                    ((estatisticas?.mediaDiaria ?? 0) / 500) * 100,
+                    100
+                  )}%`,
+                },
+              ]}
+            />
+          </View>
         </View>
-
       </View>
-
-      {/* CONSUMO TOTAL */}
 
       <View style={styles.cardFull}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="bar-chart-outline" size={20} color="#7B3FA1" />
 
-        <Text style={styles.cardTitle}>
-          Consumo Total
-        </Text>
+          <Text style={styles.cardTitle}>Consumo total</Text>
+        </View>
 
-        <Text style={styles.value}>
-          {estatisticas?.totalConsumido ?? 0} g
-        </Text>
+        <Text style={styles.value}>{estatisticas?.totalConsumido ?? 0} g</Text>
 
+        <View style={styles.progressBarBackground}>
+          <View
+            style={[
+              styles.progressBarFill,
+              {
+                width: `${Math.min(
+                  ((estatisticas?.totalConsumido ?? 0) / 2000) * 100,
+                  100
+                )}%`,
+              },
+            ]}
+          />
+        </View>
       </View>
-
-      {/* ALERTA */}
 
       <View style={styles.cardAlert}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="alert-circle-outline" size={20} color="#F39C12" />
 
-        <Text style={styles.cardTitle}>
-          🚨 Consumo
-        </Text>
+          <Text style={styles.cardTitle}>Consumo</Text>
+        </View>
 
-        <Text style={styles.value}>
+        <Text style={styles.alertText}>
           {estatisticas?.alertaConsumo ?? "Normal"}
         </Text>
-
       </View>
-
-      {/* IA */}
 
       <View style={styles.cardIA}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="sparkles-outline" size={22} color="#7B3FA1" />
 
-        <Text style={styles.cardTitleIA}>
-          🤖 Recomendação IA
+          <Text style={styles.cardTitleIA}>Recomendação Inteligente</Text>
+        </View>
+
+        <Text style={styles.iaDescription}>
+          Com base no histórico de consumo do pet, o sistema recomenda
+          automaticamente a quantidade ideal de ração.
         </Text>
 
-        <Text style={styles.valueIA}>
-          {ia?.recomendacao ?? 0} g
-        </Text>
+        <Text style={styles.valueIA}>{ia?.recomendacao ?? 0} g</Text>
 
-        <TouchableOpacity
-          style={styles.buttonIA}
-          onPress={alimentarComIA}
-        >
-
-          <Text style={styles.buttonText}>
-            Alimentar com IA
-          </Text>
-
+        <TouchableOpacity style={styles.buttonIA} onPress={alimentarComIA}>
+          <Text style={styles.buttonText}>Liberar ração automaticamente</Text>
         </TouchableOpacity>
-
       </View>
 
+      <View style={styles.bottomSpace} />
     </ScrollView>
-
   );
-
 }
 
 const styles = StyleSheet.create({
-
-  container:{
-    flex:1,
-    padding:20,
-    backgroundColor:"#f2f4f7"
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#F8F6FB",
   },
 
-  center:{
-    flex:1,
-    justifyContent:"center",
-    alignItems:"center"
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8F6FB",
   },
 
-  statusBox:{
-    padding:15,
-    borderRadius:14,
-    marginBottom:20,
-    alignItems:"center"
+  header: {
+    width: "100%",
+    paddingTop: 10,
+    paddingBottom: 20,
   },
 
-  statusText:{
-    color:"#fff",
-    fontSize:16,
-    fontWeight:"bold"
+  appTitle: {
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "#2E2E2E",
   },
 
-  grid:{
-    flexDirection:"row",
-    flexWrap:"wrap",
-    justifyContent:"space-between"
+  appSubtitle: {
+    fontSize: 14,
+    color: "#777",
+    marginTop: 4,
+    lineHeight: 20,
   },
 
-  card:{
-    width:"48%",
-    backgroundColor:"#fff",
-    padding:20,
-    borderRadius:14,
-    marginBottom:15,
-    elevation:2
+  statusBox: {
+    padding: 15,
+    borderRadius: 16,
+    marginBottom: 20,
+    alignItems: "center",
+    elevation: 2,
   },
 
-  cardFull:{
-    backgroundColor:"#fff",
-    padding:20,
-    borderRadius:14,
-    marginBottom:15,
-    elevation:2
+  statusContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 
-  cardAlert:{
-    backgroundColor:"#fff",
-    padding:20,
-    borderRadius:14,
-    marginBottom:15,
-    elevation:2
+  statusText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 
-  cardIA:{
-    backgroundColor:"#000",
-    padding:20,
-    borderRadius:14,
-    marginTop:10
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
 
-  cardTitle:{
-    fontSize:14,
-    color:"#666"
+  card: {
+    width: "48%",
+    backgroundColor: "#fff",
+    padding: 18,
+    borderRadius: 18,
+    marginBottom: 15,
+    elevation: 2,
   },
 
-  cardTitleIA:{
-    fontSize:14,
-    color:"#aaa"
+  cardFull: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 18,
+    marginBottom: 15,
+    elevation: 2,
   },
 
-  value:{
-    fontSize:26,
-    fontWeight:"bold",
-    marginTop:5
+  cardAlert: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 18,
+    marginBottom: 15,
+    elevation: 2,
+    borderLeftWidth: 5,
+    borderLeftColor: "#F39C12",
   },
 
-  valueIA:{
-    fontSize:32,
-    fontWeight:"bold",
-    color:"#fff",
-    marginTop:5
+  cardIA: {
+    backgroundColor: "#F3E8F7",
+    padding: 20,
+    borderRadius: 20,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#E7D4EF",
+    elevation: 2,
   },
 
-  buttonIA:{
-    backgroundColor:"#fff",
-    padding:14,
-    borderRadius:10,
-    marginTop:12,
-    alignItems:"center"
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
   },
 
-  buttonText:{
-    fontWeight:"bold",
-    color:"#000"
-  }
+  cardTitle: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "600",
+  },
 
+  cardTitleIA: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#2E2E2E",
+  },
+
+  value: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginTop: 6,
+    color: "#2E2E2E",
+  },
+
+  alertText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginTop: 6,
+    color: "#2E2E2E",
+  },
+
+  iaDescription: {
+    color: "#555",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 4,
+  },
+
+  valueIA: {
+    fontSize: 38,
+    fontWeight: "bold",
+    color: "#2E2E2E",
+    marginTop: 18,
+  },
+
+  buttonIA: {
+    backgroundColor: "#7B3FA1",
+    padding: 15,
+    borderRadius: 14,
+    marginTop: 18,
+    alignItems: "center",
+  },
+
+  buttonText: {
+    fontWeight: "bold",
+    color: "#fff",
+    fontSize: 15,
+  },
+
+  progressBarBackground: {
+    width: "100%",
+    height: 10,
+    backgroundColor: "#EEE",
+    borderRadius: 20,
+    marginTop: 12,
+    overflow: "hidden",
+  },
+
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#7B3FA1",
+    borderRadius: 20,
+  },
+
+  bottomSpace: {
+    height: 30,
+  },
 });

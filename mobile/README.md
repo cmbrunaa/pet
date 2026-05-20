@@ -153,8 +153,10 @@ baseURL: "http://192.168.0.105:3000"
 
 ⚠️ Importante:
 
-- Não usar localhost no celular  
+- Não usar npm audit no celular  
 - Usar o IP da máquina que roda o backend  
+
+AO CONECTAR A REDES PUBLICAS OU MOBILE RODAR NO MOBILE -> npx expo start --tunnel
 
 ---
 

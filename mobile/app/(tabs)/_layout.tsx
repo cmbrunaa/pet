@@ -1,21 +1,23 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { View, Text, Image } from "react-native";
 
 export default function TabLayout() {
-
   return (
-
     <Tabs
       screenOptions={{
         headerStyle: {
-          backgroundColor: "#000",
+          backgroundColor: "#e6f3f2",
         },
 
         headerTintColor: "#fff",
 
         tabBarStyle: {
-          backgroundColor: "#000",
-          borderTopColor: "#111",
+          backgroundColor: "#ab81b6",
+          borderTopColor: "#4f404024",
+          borderTopWidth: 2,
+          borderTopEndRadius: 12,
+          borderTopLeftRadius: 12,
         },
 
         tabBarActiveTintColor: "#fff",
@@ -23,40 +25,80 @@ export default function TabLayout() {
         tabBarInactiveTintColor: "#555",
       }}
     >
-
       <Tabs.Screen
         name="dashboard"
         options={{
           title: "Dashboard",
+          headerTitle: () => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={require("../../assets/images/logo_pet_feeder.png")}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  marginRight: 10,
+                }}
+              />
 
-          tabBarIcon: ({ color, size }) => (
-
-            <Ionicons
-              name="grid-outline"
-              size={size}
-              color={color}
-            />
-
+              <Text
+                style={{
+                  color: "#E2A9F1",
+                  fontSize: 22,
+                  fontWeight: "bold",
+                }}
+              >
+                SmartFeeder
+              </Text>
+            </View>
           ),
 
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="grid-outline" size={size} color={color} />
+          ),
         }}
       />
 
       <Tabs.Screen
         name="alimentar"
         options={{
-          title: "Alimentar",
+          headerTitle: () => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={require("../../assets/images/logo_pet_feeder.png")}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  marginRight: 10,
+                }}
+              />
 
-          tabBarIcon: ({ color, size }) => (
-
-            <Ionicons
-              name="restaurant-outline"
-              size={size}
-              color={color}
-            />
-
+              <Text
+                style={{
+                  color: "#E2A9F1",
+                  fontSize: 22,
+                  fontWeight: "bold",
+                }}
+              >
+                SmartFeeder
+              </Text>
+            </View>
           ),
 
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="restaurant-outline" size={size} color={color} />
+          ),
         }}
       />
 
@@ -64,17 +106,38 @@ export default function TabLayout() {
         name="agendamentos"
         options={{
           title: "Agendar",
+          headerTitle: () => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={require("../../assets/images/logo_pet_feeder.png")}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  marginRight: 10,
+                }}
+              />
 
-          tabBarIcon: ({ color, size }) => (
-
-            <Ionicons
-              name="calendar-outline"
-              size={size}
-              color={color}
-            />
-
+              <Text
+                style={{
+                  color: "#E2A9F1",
+                  fontSize: 22,
+                  fontWeight: "bold",
+                }}
+              >
+                SmartFeeder
+              </Text>
+            </View>
           ),
 
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
         }}
       />
 
@@ -82,17 +145,37 @@ export default function TabLayout() {
         name="historico"
         options={{
           title: "Histórico",
+          headerTitle: () => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={require("../../assets/images/logo_pet_feeder.png")}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  marginRight: 10,
+                }}
+              />
 
-          tabBarIcon: ({ color, size }) => (
-
-            <Ionicons
-              name="time-outline"
-              size={size}
-              color={color}
-            />
-
+              <Text
+                style={{
+                  color: "#E2A9F1",
+                  fontSize: 22,
+                  fontWeight: "bold",
+                }}
+              >
+                SmartFeeder
+              </Text>
+            </View>
           ),
-
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" size={size} color={color} />
+          ),
         }}
       />
 
@@ -101,21 +184,40 @@ export default function TabLayout() {
         options={{
           title: "Perfil",
 
-          tabBarIcon: ({ color, size }) => (
+          headerTitle: () => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={require("../../assets/images/logo_pet_feeder.png")}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  marginRight: 10,
+                }}
+              />
 
-            <Ionicons
-              name="person-outline"
-              size={size}
-              color={color}
-            />
-
+              <Text
+                style={{
+                  color: "#E2A9F1",
+                  fontSize: 22,
+                  fontWeight: "bold",
+                }}
+              >
+                SmartFeeder
+              </Text>
+            </View>
           ),
 
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
         }}
       />
-
     </Tabs>
-
   );
-
 }
