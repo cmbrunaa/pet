@@ -239,7 +239,6 @@ export default function Historicos(){
   );
 
 }
-
 const styles = StyleSheet.create({
 
   container:{
