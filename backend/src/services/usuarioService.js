@@ -81,6 +81,13 @@ exports.login = async (
       { expiresIn: "30d" }
     );
 
-  return token;
-
+return {
+  token,
+  usuario: {
+    id: usuario.id,
+    nome: usuario.nome,
+    email: usuario.email,
+    nomePet: usuario.nome_pet
+  }
+};
 };

@@ -48,13 +48,13 @@ exports.login = async (req, res) => {
 
   const { email, senha } = req.body;
 
-  const token =
+  const resultado =
     await usuarioService.login(
       email,
       senha
     );
 
-  if (!token) {
+  if (!resultado) {
 
     return res.status(401).json({
       erro: "Email ou senha inválidos"
@@ -63,7 +63,8 @@ exports.login = async (req, res) => {
   }
 
   res.json({
-    token
+    token: resultado.token,
+    usuario: resultado.usuario
   });
 
 };

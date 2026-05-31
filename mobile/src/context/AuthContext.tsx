@@ -14,9 +14,23 @@ import {
   removeToken
 } from "../services/storage";
 
+type Usuario = {
+
+  id: number;
+
+  nome: string;
+
+  email: string;
+
+  nomePet: string;
+
+};
+
 type AuthContextType = {
 
   userToken: string | null;
+
+  usuario: Usuario | null;
 
   loading: boolean;
 
@@ -47,12 +61,11 @@ export function AuthProvider({
   const [userToken,setUserToken] =
     useState<string | null>(null);
 
+  const [usuario,setUsuario] =
+    useState<Usuario | null>(null);
+
   const [loading,setLoading] =
     useState(true);
-
-  // ===============================
-  // CARREGAR TOKEN
-  // ===============================
 
   useEffect(()=>{
 
@@ -88,10 +101,6 @@ export function AuthProvider({
 
   },[]);
 
-  // ===============================
-  // LOGIN
-  // ===============================
-
   async function login(
     email:string,
     senha:string
@@ -111,6 +120,9 @@ export function AuthProvider({
       const token =
         response.data?.token;
 
+      const usuario =
+        response.data?.usuario;
+
       if(!token){
 
         throw new Error(
@@ -122,6 +134,12 @@ export function AuthProvider({
       await saveToken(token);
 
       setUserToken(token);
+
+      if(usuario){
+
+        setUsuario(usuario);
+
+      }
 
     }catch(error:any){
 
@@ -136,15 +154,13 @@ export function AuthProvider({
 
   }
 
-  // ===============================
-  // LOGOUT
-  // ===============================
-
   async function logout(){
 
     await removeToken();
 
     setUserToken(null);
+
+    setUsuario(null);
 
   }
 
@@ -153,6 +169,7 @@ export function AuthProvider({
     <AuthContext.Provider
       value={{
         userToken,
+        usuario,
         loading,
         login,
         logout

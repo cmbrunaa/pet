@@ -1,5 +1,5 @@
 const dashboardService =
-require("./dashboardService");
+  require("./dashboardService");
 
 async function gerarRecomendacao(usuarioId) {
 
@@ -10,29 +10,29 @@ async function gerarRecomendacao(usuarioId) {
         .obterDashboardSemanal(usuarioId);
 
     const mediaDiaria =
-      dados.mediaDiaria;
+      Number(dados.mediaDiaria || 0);
+
+    const totalConsumido =
+      Number(dados.totalConsumido || 0);
 
     if (!mediaDiaria || mediaDiaria === 0) {
 
       return {
-
         recomendacao: 100,
-
+        mediaDiaria: 0,
+        totalConsumido,
+        padrao: "Sem dados suficientes",
+        confianca: "Baixa",
         mensagem:
-          "Usando valor padrão (100g)"
-
+          "Ainda não há histórico suficiente. Foi usado um valor padrão para alimentação."
       };
 
     }
-
-    // 🎯 dividir por refeições
 
     const refeicoesPorDia = 2;
 
     let quantidade =
       mediaDiaria / refeicoesPorDia;
-
-    // ajuste IA
 
     quantidade =
       quantidade * 1.05;
@@ -40,13 +40,40 @@ async function gerarRecomendacao(usuarioId) {
     quantidade =
       Math.round(quantidade);
 
+    let padrao =
+      "Consumo estável";
+
+    let confianca =
+      "Alta";
+
+    if (mediaDiaria < 50) {
+
+      padrao =
+        "Consumo baixo";
+
+      confianca =
+        "Média";
+
+    }
+
+    if (mediaDiaria > 200) {
+
+      padrao =
+        "Consumo elevado";
+
+      confianca =
+        "Média";
+
+    }
+
     return {
-
       recomendacao: quantidade,
-
+      mediaDiaria,
+      totalConsumido,
+      padrao,
+      confianca,
       mensagem:
-        "Baseado no consumo médio"
-
+        "Recomendação gerada com base no histórico de consumo registrado pelo sistema."
     };
 
   } catch (error) {

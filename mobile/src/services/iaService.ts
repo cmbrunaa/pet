@@ -1,6 +1,15 @@
 import api from "./api";
 
-export async function getRecomendacaoIA() {
+export type RecomendacaoIA = {
+  recomendacao: number;
+  mediaDiaria: number;
+  totalConsumido: number;
+  padrao: string;
+  confianca: string;
+  mensagem: string;
+};
+
+export async function getRecomendacaoIA(): Promise<RecomendacaoIA> {
 
   try {
 
@@ -20,6 +29,10 @@ export async function getRecomendacaoIA() {
 
     return {
       recomendacao: 0,
+      mediaDiaria: 0,
+      totalConsumido: 0,
+      padrao: "Indisponível",
+      confianca: "Baixa",
       mensagem: "Erro ao gerar recomendação"
     };
 

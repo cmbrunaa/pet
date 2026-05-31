@@ -192,7 +192,7 @@ export default function Dashboard() {
                 {
                   width: `${Math.min(
                     ((estatisticas?.mediaDiaria ?? 0) / 500) * 100,
-                    100
+                    100,
                   )}%`,
                 },
               ]}
@@ -217,7 +217,7 @@ export default function Dashboard() {
               {
                 width: `${Math.min(
                   ((estatisticas?.totalConsumido ?? 0) / 2000) * 100,
-                  100
+                  100,
                 )}%`,
               },
             ]}
@@ -241,18 +241,34 @@ export default function Dashboard() {
         <View style={styles.cardHeader}>
           <Ionicons name="sparkles-outline" size={22} color="#7B3FA1" />
 
-          <Text style={styles.cardTitleIA}>Recomendação Inteligente</Text>
+          <Text style={styles.cardTitleIA}>Análise Inteligente</Text>
         </View>
 
         <Text style={styles.iaDescription}>
-          Com base no histórico de consumo do pet, o sistema recomenda
-          automaticamente a quantidade ideal de ração.
+          {ia?.mensagem ??
+            "Análise baseada no histórico de consumo registrado pelo sistema."}
+        </Text>
+
+        <View style={styles.iaBox}>
+          <Text style={styles.iaLabel}>Consumo médio diário</Text>
+
+          <Text style={styles.iaText}>{ia?.mediaDiaria ?? 0}g</Text>
+        </View>
+
+        <View style={styles.iaBox}>
+          <Text style={styles.iaLabel}>Padrão identificado</Text>
+
+          <Text style={styles.iaText}>{ia?.padrao ?? "Indisponível"}</Text>
+        </View>
+
+        <Text style={styles.recommendationLabel}>
+          Recomendação por alimentação
         </Text>
 
         <Text style={styles.valueIA}>{ia?.recomendacao ?? 0} g</Text>
 
         <TouchableOpacity style={styles.buttonIA} onPress={alimentarComIA}>
-          <Text style={styles.buttonText}>Liberar ração automaticamente</Text>
+          <Text style={styles.buttonText}>Liberar recomendação</Text>
         </TouchableOpacity>
       </View>
 
@@ -432,7 +448,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#7B3FA1",
     borderRadius: 20,
   },
+  iaBox: {
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+    borderRadius: 14,
+    marginTop: 10,
+  },
 
+  iaLabel: {
+    fontSize: 12,
+    color: "#777",
+    fontWeight: "600",
+  },
+
+  iaText: {
+    fontSize: 15,
+    color: "#2E2E2E",
+    fontWeight: "bold",
+    marginTop: 3,
+  },
+
+  recommendationLabel: {
+    fontSize: 13,
+    color: "#555",
+    fontWeight: "600",
+    marginTop: 18,
+  },
   bottomSpace: {
     height: 30,
   },

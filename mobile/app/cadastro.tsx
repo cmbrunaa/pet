@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
 
 import {
   View,
@@ -9,61 +8,89 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 
 import { router } from "expo-router";
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import api from "../src/services/api";
 
-export default function LoginScreen() {
+export default function CadastroScreen() {
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-
   const [senha, setSenha] = useState("");
-
+  const [nomePet, setNomePet] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
-
-  async function handleLogin() {
-    if (!email || !senha) {
-      Alert.alert("Erro", "Preencha email e senha");
-
+  async function handleCadastro() {
+    if (!nome || !email || !senha || !nomePet) {
+      Alert.alert("Erro", "Preencha todos os campos");
       return;
     }
 
     try {
       setLoading(true);
 
-      await login(email, senha);
+      await api.post("/api/usuarios", {
+        nome,
+        email,
+        senha,
+        nomePet,
+      });
 
-      router.replace("/(tabs)/dashboard");
-    } catch (error) {
-      Alert.alert("Erro", "Email ou senha inválidos");
+      Alert.alert("Sucesso", "Conta criada com sucesso!");
+
+      router.replace("/");
+
+    } catch (error: any) {
+      Alert.alert(
+        "Erro",
+        error?.response?.data?.erro || "Falha ao criar conta"
+      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <View style={styles.container}>
-      {/* HEADER */}
-
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <View style={styles.iconContainer}>
-          <MaterialCommunityIcons name="paw" size={55} color="#7B3FA1" />
+          <MaterialCommunityIcons
+            name="paw"
+            size={55}
+            color="#7B3FA1"
+          />
         </View>
 
-        <Text style={styles.title}>SmartFeeder</Text>
+        <Text style={styles.title}>Criar conta</Text>
 
         <Text style={styles.subtitle}>
-          Controle inteligente para alimentação do seu pet
+          Cadastre-se para controlar a alimentação do seu pet
         </Text>
       </View>
 
-      {/* CARD LOGIN */}
-
       <View style={styles.card}>
-        {/* EMAIL */}
+        <View style={styles.inputContainer}>
+          <MaterialCommunityIcons
+            name="account-outline"
+            size={22}
+            color="#7B3FA1"
+            style={styles.inputIcon}
+          />
+
+          <TextInput
+            placeholder="Seu nome"
+            placeholderTextColor="#999"
+            style={styles.input}
+            value={nome}
+            onChangeText={setNome}
+          />
+        </View>
 
         <View style={styles.inputContainer}>
           <MaterialCommunityIcons
@@ -80,10 +107,9 @@ export default function LoginScreen() {
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
+            keyboardType="email-address"
           />
         </View>
-
-        {/* SENHA */}
 
         <View style={styles.inputContainer}>
           <MaterialCommunityIcons
@@ -103,43 +129,63 @@ export default function LoginScreen() {
           />
         </View>
 
-        {/* BOTÃO */}
+        <View style={styles.inputContainer}>
+          <MaterialCommunityIcons
+            name="dog"
+            size={22}
+            color="#7B3FA1"
+            style={styles.inputIcon}
+          />
+
+          <TextInput
+            placeholder="Nome do pet"
+            placeholderTextColor="#999"
+            style={styles.input}
+            value={nomePet}
+            onChangeText={setNomePet}
+          />
+        </View>
 
         <TouchableOpacity
           style={styles.button}
-          onPress={handleLogin}
+          onPress={handleCadastro}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Entrar</Text>
+            <Text style={styles.buttonText}>Cadastrar</Text>
           )}
         </TouchableOpacity>
-        {/* CRIAR CONTA */}
 
         <TouchableOpacity
-          style={styles.createAccount}
-          onPress={() => router.push("/cadastro")}
+          style={styles.loginLink}
+          onPress={() => router.replace("/")}
         >
-          <Text style={styles.createAccountText}>Criar nova conta</Text>
+          <Text style={styles.loginText}>
+            Já tenho conta
+          </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8F6FB",
+  },
+
+  content: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "#F8F6FB",
   },
 
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 35,
   },
 
   iconContainer: {
@@ -207,14 +253,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
-  createAccount: {
+
+  loginLink: {
     marginTop: 18,
     alignItems: "center",
   },
 
-  createAccountText: {
+  loginText: {
     color: "#7B3FA1",
     fontWeight: "bold",
-    fontSize: 15,
   },
 });
