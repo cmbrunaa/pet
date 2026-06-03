@@ -14,7 +14,7 @@ export default function TabLayout() {
               style={styles.logo}
             />
 
-            <Text style={styles.logoText}>SmartFeeder</Text>
+            <Text style={styles.logoText}>PetFeeder</Text>
           </View>
         ),
         headerStyle: {

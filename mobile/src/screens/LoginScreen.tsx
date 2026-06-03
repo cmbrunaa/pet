@@ -53,7 +53,7 @@ export default function LoginScreen() {
           <MaterialCommunityIcons name="paw" size={55} color="#7B3FA1" />
         </View>
 
-        <Text style={styles.title}>SmartFeeder</Text>
+        <Text style={styles.title}>PetFeeder</Text>
 
         <Text style={styles.subtitle}>
           Controle inteligente para alimentação do seu pet

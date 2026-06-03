@@ -129,7 +129,7 @@ export default function Perfil() {
         </View>
 
         <Text style={styles.infoText}>
-          O SmartFeeder auxilia no controle da alimentação do pet por meio de
+          O PetFeeder auxilia no controle da alimentação do pet por meio de
           automação, histórico de consumo e recomendação inteligente baseada nos
           dados registrados.
         </Text>
