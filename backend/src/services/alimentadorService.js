@@ -2,28 +2,26 @@ const agendamentoModel = require("../models/agendamentoModel");
 
 const historicoModel = require("../models/historicoModel");
 
+const mqttClient = require("../config/mqtt");
+
 const db = require("../config/db");
-
-// ===============================
-// ESTRUTURAS POR USUÁRIO
-// ===============================
-
-let comandosPendentes = {};
-
-let pesosUsuarios = {};
-
-let pesosDesejadosUsuarios = {};
-
-let ultimoStatusUsuarios = {};
+const {
+  atualizarPeso,
+  obterPeso,
+  obterPesoDesejado,
+  criarComandoPendente,
+  quantidadeLiberar,
+} = require("../repository/alimentadorRepository");
+const { liberarRacao } = require("./mqttService");
 
 // ===============================
 // COMANDO MANUAL
 // ===============================
 
 exports.criarComando = (usuarioId, quantidadeSolicitada) => {
-  const pesoAtual = pesosUsuarios[usuarioId] || 0;
+  const pesoAtual = obterPeso(usuarioId);
 
-  const pesoDesejado = pesosDesejadosUsuarios[usuarioId] || 300;
+  const pesoDesejado = obterPesoDesejado(usuarioId);
 
   // 🎯 calcula quanto falta
 
@@ -35,24 +33,13 @@ exports.criarComando = (usuarioId, quantidadeSolicitada) => {
 
   // 🎯 limita ao necessário
 
-  const quantidadeLiberar = Math.min(
-    quantidadeSolicitada,
-    quantidadeNecessaria,
-  );
+  const qtdLiberar = quantidadeLiberar(usuarioId, quantidadeSolicitada);
 
-  comandosPendentes[usuarioId] = {
-    tipo: "ALIMENTAR",
+  liberarRacao(qtdLiberar);
 
-    quantidade: quantidadeLiberar,
+  const comandos = criarComandoPendente(usuarioId, qtdLiberar);
 
-    data: new Date(),
-
-    pesoAntes: pesoAtual,
-
-    pesoDesejado,
-  };
-
-  return comandosPendentes[usuarioId];
+  return comandos;
 };
 
 // ===============================
@@ -216,9 +203,7 @@ exports.obterStatus = (usuarioId) => {
 // ===============================
 
 exports.atualizarPeso = (usuarioId, peso) => {
-  pesosUsuarios[usuarioId] = peso;
-
-  console.log("⚖️ Peso atualizado:", peso);
+  atualizarPeso(usuarioId, peso);
 };
 
 exports.atualizarMetaIA = async (usuarioId) => {
@@ -246,7 +231,7 @@ exports.atualizarMetaIA = async (usuarioId) => {
 // ===============================
 
 exports.obterPeso = (usuarioId) => {
-  return pesosUsuarios[usuarioId] || 0;
+  return obterPeso(usuarioId);
 };
 
 // ===============================
@@ -274,128 +259,73 @@ exports.obterPesoDesejado = (usuarioId) => {
 let ultimoExecutado = {};
 
 setInterval(() => {
-
   try {
-
     const agora = new Date();
 
-    const horaAtual =
-      agora.getHours()
-        .toString()
-        .padStart(2,"0");
+    const horaAtual = agora.getHours().toString().padStart(2, "0");
 
-    const minutoAtual =
-      agora.getMinutes()
-        .toString()
-        .padStart(2,"0");
+    const minutoAtual = agora.getMinutes().toString().padStart(2, "0");
 
-    const horarioAtual =
-      `${horaAtual}:${minutoAtual}`;
+    const horarioAtual = `${horaAtual}:${minutoAtual}`;
 
-    console.log(
-      "🕒 Atual:",
-      horarioAtual
-    );
+    console.log("🕒 Atual:", horarioAtual);
 
-    const sql =
-      `SELECT * FROM agendamentos`;
+    const sql = `SELECT * FROM agendamentos`;
 
-    db.query(sql,(err,lista)=>{
-
-      if(err){
-
-        console.log(
-          "Erro agendamento:",
-          err
-        );
+    db.query(sql, (err, lista) => {
+      if (err) {
+        console.log("Erro agendamento:", err);
 
         return;
-
       }
 
-      lista.forEach((ag)=>{
+      lista.forEach((ag) => {
+        const horaBanco = ag.hora.toString().substring(0, 5);
 
-        const horaBanco =
-          ag.hora
-            .toString()
-            .substring(0,5);
+        const id = ag.id;
 
-        const id =
-          ag.id;
+        const usuarioId = ag.usuario_id;
 
-        const usuarioId =
-          ag.usuario_id;
-
-        console.log(
-          "🕒 Banco:",
-          horaBanco
-        );
+        console.log("🕒 Banco:", horaBanco);
 
         // 🎯 EXECUTA SOMENTE NO MINUTO EXATO
 
-        if(
-
+        if (
           horarioAtual === horaBanco &&
+          ultimoExecutado[id] !== horarioAtual
+        ) {
+          const pesoDesejado = ag.peso_desejado;
 
-          ultimoExecutado[id]
-          !== horarioAtual
+          const qtdNecessaria = quantidadeLiberar(usuarioId, pesoDesejado);
+          const pesoAtual = obterPeso(usuarioId);
 
-        ){
+          if (qtdNecessaria > 0 && pesoAtual < pesoDesejado) {
+            // comandosPendentes[
+            //   usuarioId
+            // ] = {
 
-          const pesoAtual =
-            pesosUsuarios[usuarioId] || 0;
+            //   tipo:"AGENDAMENTO",
 
-          const pesoDesejado =
-            ag.peso_desejado;
+            //   quantidade,
 
-          if(
-            pesoAtual <
-            pesoDesejado
-          ){
+            //   data:new Date(),
 
-            const quantidade =
-              pesoDesejado -
-              pesoAtual;
+            //   pesoAntes:
+            //     pesoAtual,
 
-            comandosPendentes[
-              usuarioId
-            ] = {
+            //   pesoDesejado
 
-              tipo:"AGENDAMENTO",
+            // };
 
-              quantidade,
+            console.log(`⏰ EXECUTADO: ${horaBanco}`);
+            liberarRacao(qtdNecessaria);
 
-              data:new Date(),
-
-              pesoAntes:
-                pesoAtual,
-
-              pesoDesejado
-
-            };
-
-            console.log(
-              `⏰ EXECUTADO: ${horaBanco}`
-            );
-
-            ultimoExecutado[id] =
-              horarioAtual;
-
+            ultimoExecutado[id] = horarioAtual;
           }
-
         }
-
       });
-
     });
-
-  } catch(error){
-
-    console.log(
-      "Erro agendamento:",
-      error
-    );
-
+  } catch (error) {
+    console.log("Erro agendamento:", error);
   }
-
 }, 5000);

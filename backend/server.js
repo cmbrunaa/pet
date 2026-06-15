@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 
 require("./src/config/db");
+const mqttClient = require('./src/config/mqtt');
 
 const alimentadorRoutes =
 require("./src/routes/alimentadorRoutes");
