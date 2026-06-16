@@ -1,70 +1,49 @@
-require("dotenv").config();
+const connection = require("./db");
 
-const express = require("express");
-const cors = require("cors");
+function initDb() {
+  const queries = [
+    `CREATE TABLE IF NOT EXISTS usuarios (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      nome VARCHAR(100) NOT NULL,
+      email VARCHAR(150) NOT NULL UNIQUE,
+      senha VARCHAR(255) NOT NULL,
+      nome_pet VARCHAR(100) NOT NULL,
+      criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
 
-require("./src/config/db");
-const mqttClient = require('./src/config/mqtt');
+    `CREATE TABLE IF NOT EXISTS agendamentos (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      usuario_id INT NOT NULL,
+      hora TIME NOT NULL,
+      peso_desejado INT NOT NULL,
+      criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON DELETE CASCADE
+    )`,
 
-const alimentadorRoutes =
-require("./src/routes/alimentadorRoutes");
+    `CREATE TABLE IF NOT EXISTS historico (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      usuario_id INT NOT NULL,
+      data DATETIME NOT NULL,
+      quantidade INT NOT NULL,
+      peso_antes INT DEFAULT 0,
+      peso_desejado INT DEFAULT 0,
+      criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON DELETE CASCADE
+    )`,
+  ];
 
-const usuarioRoutes =
-require("./src/routes/usuarioRoutes");
+  queries.forEach((sql) => {
+    connection.query(sql, (err) => {
+      if (err) {
+        console.error("Erro ao criar tabela:", err);
+        return;
+      }
 
-const dashboardRoutes =
-require("./src/routes/dashboardRoutes");
+      console.log("✅ Tabela verificada/criada");
+    });
+  });
+}
 
-const iaRoutes =
-require("./src/routes/iaRoutes");
-
-const app = express();
-
-// ===============================
-// MIDDLEWARES
-// ===============================
-
-app.use(cors());
-
-app.use(express.json());
-
-// ===============================
-// ROTAS
-// ===============================
-
-// Usuários
-
-app.use("/api", usuarioRoutes);
-
-// Alimentador
-
-app.use("/api", alimentadorRoutes);
-
-// Dashboard
-
-app.use(
-  "/api/dashboard",
-  dashboardRoutes
-);
-
-// IA
-
-app.use(
-  "/api/ia",
-  iaRoutes
-);
-
-// ===============================
-// PORTA
-// ===============================
-
-const PORT =
-  process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-
-  console.log(
-    `Servidor rodando na porta ${PORT}`
-  );
-
-});
+module.exports = initDb;

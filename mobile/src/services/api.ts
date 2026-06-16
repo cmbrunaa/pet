@@ -2,7 +2,7 @@ import axios from "axios";
 import { getToken, removeToken } from "./storage";
 
 const api = axios.create({
-  baseURL: "http://192.168.0.105:3000",
+  baseURL: "https://pet-production-1cb0.up.railway.app",
 
   timeout: 10000,
 });
