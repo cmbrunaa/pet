@@ -29,17 +29,15 @@ exports.alimentar = async (req, res) => {
     // ============================
     // MODO DIRETO (IA ou manual)
     // ============================
+    // 🧠 pega peso atual
 
+    const pesoAtual = alimentadorService.obterPeso(usuarioId);
     if (modo === "direto") {
       if (!quantidade || quantidade <= 0) {
         return res.status(400).json({
           erro: "Quantidade inválida",
         });
       }
-
-      // 🧠 pega peso atual
-
-      const pesoAtual = alimentadorService.obterPeso(usuarioId);
 
       const capacidadeMaxima = 300;
 
