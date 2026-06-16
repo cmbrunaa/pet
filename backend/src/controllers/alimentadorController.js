@@ -18,7 +18,7 @@ exports.status = (req, res) => {
 // ALIMENTAR MANUAL
 // ===============================
 
-exports.alimentar = (req, res) => {
+exports.alimentar = async (req, res) => {
   try {
     const usuarioId = req.usuarioId;
 
@@ -72,7 +72,13 @@ exports.alimentar = (req, res) => {
       quantidadeLiberar,
     );
 
-    await historicoModel.salvar(usuarioId, new Date().toLocaleDateString("pt-BR"), quantidadeLiberar, pesoAtual, alimentadorService.obterPesoDesejado(usuarioId));
+    await historicoModel.salvar(
+      usuarioId,
+      new Date().toLocaleDateString("pt-BR"),
+      quantidadeLiberar,
+      pesoAtual,
+      alimentadorService.obterPesoDesejado(usuarioId),
+    );
 
     res.json({
       mensagem: "Comando criado",

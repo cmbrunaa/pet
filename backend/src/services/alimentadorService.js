@@ -258,7 +258,7 @@ exports.obterPesoDesejado = (usuarioId) => {
 
 let ultimoExecutado = {};
 
-setInterval(async () => {
+setInterval(() => {
   try {
     const agora = new Date();
 
@@ -272,7 +272,7 @@ setInterval(async () => {
 
     const sql = `SELECT * FROM agendamentos`;
 
-    db.query(sql, (err, lista) => {
+    db.query(sql, async (err, lista) => {
       if (err) {
         console.log("Erro agendamento:", err);
 
@@ -319,12 +319,18 @@ setInterval(async () => {
 
             console.log(`⏰ EXECUTADO: ${horaBanco}`);
             liberarRacao(qtdNecessaria);
-            await historicoModel.salvar(usuarioId, new Date().toLocaleDateString("pt-BR"), qtdNecessaria, pesoAtual, pesoDesejado);
+            await historicoModel.salvar(
+              usuarioId,
+              new Date().toLocaleDateString("pt-BR"),
+              qtdNecessaria,
+              pesoAtual,
+              pesoDesejado,
+            );
 
             ultimoExecutado[id] = horarioAtual;
           }
         }
-      };
+      }
     });
   } catch (error) {
     console.log("Erro agendamento:", error);
