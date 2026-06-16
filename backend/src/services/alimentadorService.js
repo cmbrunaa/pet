@@ -258,7 +258,7 @@ exports.obterPesoDesejado = (usuarioId) => {
 
 let ultimoExecutado = {};
 
-setInterval(() => {
+setInterval(async () => {
   try {
     const agora = new Date();
 
