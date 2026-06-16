@@ -258,13 +258,12 @@ let ultimoExecutado = {};
 
 setInterval(() => {
   try {
-    const agora = new Date();
-
-    const horaAtual = agora.getHours().toString().padStart(2, "0");
-
-    const minutoAtual = agora.getMinutes().toString().padStart(2, "0");
-
-    const horarioAtual = `${horaAtual}:${minutoAtual}`;
+    const horarioAtual = new Date().toLocaleTimeString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
     console.log("🕒 Atual:", horarioAtual);
 
