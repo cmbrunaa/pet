@@ -279,7 +279,7 @@ setInterval(() => {
         return;
       }
 
-      lista.forEach((ag) => {
+      for (const ag of lista) {
         const horaBanco = ag.hora.toString().substring(0, 5);
 
         const id = ag.id;
@@ -324,7 +324,7 @@ setInterval(() => {
             ultimoExecutado[id] = horarioAtual;
           }
         }
-      });
+      };
     });
   } catch (error) {
     console.log("Erro agendamento:", error);
