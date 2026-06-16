@@ -72,7 +72,7 @@ exports.alimentar = async (req, res) => {
 
     await historicoModel.salvar(
       usuarioId,
-      new Date().toLocaleDateString("pt-BR"),
+      new Date(),
       quantidadeLiberar,
       pesoAtual,
       alimentadorService.obterPesoDesejado(usuarioId),

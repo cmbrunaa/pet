@@ -11,6 +11,10 @@ const {
   obterPesoDesejado,
   criarComandoPendente,
   quantidadeLiberar,
+  pegarPesoDesejado,
+  salvarPesoDesejado,
+  pegarStatus,
+  salvarUltimoStatus,
 } = require("../repository/alimentadorRepository");
 const { liberarRacao } = require("./mqttService");
 
@@ -162,9 +166,7 @@ exports.obterComando = async (usuarioId) => {
 
     const dataAgora = new Date();
 
-    ultimoStatusUsuarios[usuarioId] = {
-      ultimaAlimentacao: dataAgora,
-    };
+    salvarUltimoStatus(usuarioId, dataAgora);
 
     // salvar histórico
 
@@ -191,11 +193,7 @@ exports.obterComando = async (usuarioId) => {
 // ===============================
 
 exports.obterStatus = (usuarioId) => {
-  return (
-    ultimoStatusUsuarios[usuarioId] || {
-      ultimaAlimentacao: null,
-    }
-  );
+  return pegarStatus(usuarioId);
 };
 
 // ===============================
@@ -219,7 +217,7 @@ exports.atualizarMetaIA = async (usuarioId) => {
 
   const novaMeta = Math.round(media * 1.1);
 
-  pesosDesejadosUsuarios[usuarioId] = novaMeta;
+  salvarPesoDesejado(usuarioId, novaMeta);
 
   console.log("🤖 Nova meta IA:", novaMeta);
 
@@ -243,13 +241,13 @@ exports.definirPesoDesejado = (
 
   peso,
 ) => {
-  pesosDesejadosUsuarios[usuarioId] = peso;
+  salvarPesoDesejado(usuarioId, peso);
 
   return peso;
 };
 
 exports.obterPesoDesejado = (usuarioId) => {
-  return pesosDesejadosUsuarios[usuarioId] || 300;
+  return pegarPesoDesejado(usuarioId);
 };
 
 // ===============================
@@ -321,7 +319,7 @@ setInterval(() => {
             liberarRacao(qtdNecessaria);
             await historicoModel.salvar(
               usuarioId,
-              new Date().toLocaleDateString("pt-BR"),
+              new Date(),
               qtdNecessaria,
               pesoAtual,
               pesoDesejado,
