@@ -1,44 +1,28 @@
-const alimentadorService =
-require("../services/alimentadorService");
+const alimentadorService = require("../services/alimentadorService");
 
-const historicoModel =
-require("../models/historicoModel");
-
+const historicoModel = require("../models/historicoModel");
 
 // ===============================
 // STATUS
 // ===============================
 
 exports.status = (req, res) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
-
-  const status =
-    alimentadorService.obterStatus(
-      usuarioId
-    );
+  const status = alimentadorService.obterStatus(usuarioId);
 
   res.json(status);
-
 };
-
 
 // ===============================
 // ALIMENTAR MANUAL
 // ===============================
 
 exports.alimentar = (req, res) => {
-
   try {
+    const usuarioId = req.usuarioId;
 
-    const usuarioId =
-      req.usuarioId;
-
-    const {
-      quantidade,
-      modo
-    } = req.body;
+    const { quantidade, modo } = req.body;
 
     let quantidadeLiberar = 0;
 
@@ -46,501 +30,306 @@ exports.alimentar = (req, res) => {
     // MODO DIRETO (IA ou manual)
     // ============================
 
-if (modo === "direto") {
+    if (modo === "direto") {
+      if (!quantidade || quantidade <= 0) {
+        return res.status(400).json({
+          erro: "Quantidade inválida",
+        });
+      }
 
-  if (!quantidade || quantidade <= 0) {
+      // 🧠 pega peso atual
 
-    return res.status(400).json({
-      erro: "Quantidade inválida"
-    });
+      const pesoAtual = alimentadorService.obterPeso(usuarioId);
 
-  }
+      const capacidadeMaxima = 300;
 
-  // 🧠 pega peso atual
+      const espacoDisponivel = capacidadeMaxima - pesoAtual;
 
-  const pesoAtual =
-    alimentadorService.obterPeso(
-      usuarioId
-    );
+      // 🎯 limita quantidade
 
-  const capacidadeMaxima = 300;
+      quantidadeLiberar = Math.min(quantidade, espacoDisponivel);
 
-  const espacoDisponivel =
-    capacidadeMaxima - pesoAtual;
+      if (quantidadeLiberar <= 0) {
+        return res.json({
+          mensagem: "Recipiente cheio",
 
-  // 🎯 limita quantidade
-
-  quantidadeLiberar =
-    Math.min(
-      quantidade,
-      espacoDisponivel
-    );
-
-  if (quantidadeLiberar <= 0) {
-
-    return res.json({
-
-      mensagem: "Recipiente cheio",
-
-      quantidadeLiberar: 0
-
-    });
-
-  }
-
-}
+          quantidadeLiberar: 0,
+        });
+      }
+    }
 
     // ============================
     // MODO AUTOMÁTICO (sensor)
     // ============================
+    else {
+      return res.status(400).json({
+        erro: "Modo inválido",
+      });
+    }
 
-else {
+    const comando = alimentadorService.criarComando(
+      usuarioId,
+      quantidadeLiberar,
+    );
 
-  return res.status(400).json({
-
-    erro: "Modo inválido"
-
-  });
-
-}
-
-    const comando =
-      alimentadorService.criarComando(
-
-        usuarioId,
-
-        quantidadeLiberar
-
-      );
+    await historicoModel.salvar(usuarioId, new Date().toLocaleDateString("pt-BR"), quantidadeLiberar, pesoAtual, alimentadorService.obterPesoDesejado(usuarioId));
 
     res.json({
-
       mensagem: "Comando criado",
 
       quantidadeLiberar,
 
-      comando
-
+      comando,
     });
-
   } catch (error) {
-
     console.error(error);
 
     res.status(500).json({
-
-      erro: "Erro ao alimentar"
-
+      erro: "Erro ao alimentar",
     });
-
   }
-
 };
-
 
 // ===============================
 // ESP CONSULTA COMANDO
 // ===============================
 
 exports.obterComando = async (
-
   req,
 
-  res
-
+  res,
 ) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
-
-  const comando =
-    await alimentadorService
-      .obterComando(usuarioId);
+  const comando = await alimentadorService.obterComando(usuarioId);
 
   res.json({
-
-    comando: comando
-
+    comando: comando,
   });
-
 };
-
-
 
 // ===============================
 // HISTÓRICO
 // ===============================
 
 exports.historico = async (
-
   req,
 
-  res
-
+  res,
 ) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
-
-  const lista =
-    await historicoModel
-      .listarPorUsuario(usuarioId);
+  const lista = await historicoModel.listarPorUsuario(usuarioId);
 
   res.json({
-
-    historico: lista
-
+    historico: lista,
   });
-
 };
-
-
 
 // ===============================
 // PESO ATUAL
 // ===============================
 
 exports.atualizarPeso = (
-
   req,
 
-  res
-
+  res,
 ) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
-
-  const { peso } =
-    req.body;
+  const { peso } = req.body;
 
   if (peso === undefined) {
-
     return res.status(400).json({
-
-      erro: "Peso é obrigatório"
-
+      erro: "Peso é obrigatório",
     });
-
   }
 
   if (peso < 0) {
-
     return res.status(400).json({
-
-      erro: "Peso não pode ser negativo"
-
+      erro: "Peso não pode ser negativo",
     });
-
   }
 
   if (peso > 5000) {
-
     return res.status(400).json({
-
-      erro: "Peso muito alto"
-
+      erro: "Peso muito alto",
     });
-
   }
 
-  const novoPeso =
-    alimentadorService.atualizarPeso(
+  const novoPeso = alimentadorService.atualizarPeso(
+    usuarioId,
 
-      usuarioId,
-
-      peso
-
-    );
+    peso,
+  );
 
   res.json({
-
-    peso: novoPeso
-
+    peso: novoPeso,
   });
-
 };
-
-
 
 exports.obterPeso = (
-
   req,
 
-  res
-
+  res,
 ) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
-
-  const peso =
-    alimentadorService.obterPeso(
-      usuarioId
-    );
+  const peso = alimentadorService.obterPeso(usuarioId);
 
   res.json({
-
-    peso
-
+    peso,
   });
-
 };
-
-
 
 // ===============================
 // PESO DESEJADO
 // ===============================
 
 exports.definirPesoDesejado = (
-
   req,
 
-  res
-
+  res,
 ) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
+  const { peso } = req.body;
 
-  const { peso } =
-    req.body;
+  const novoPeso = alimentadorService.definirPesoDesejado(
+    usuarioId,
 
-  const novoPeso =
-    alimentadorService
-      .definirPesoDesejado(
-
-        usuarioId,
-
-        peso
-
-      );
+    peso,
+  );
 
   res.json({
-
-    pesoDesejado:
-      novoPeso
-
+    pesoDesejado: novoPeso,
   });
-
 };
-
-
 
 exports.obterPesoDesejado = (
-
   req,
 
-  res
-
+  res,
 ) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
-
-  const peso =
-    alimentadorService
-      .obterPesoDesejado(
-        usuarioId
-      );
+  const peso = alimentadorService.obterPesoDesejado(usuarioId);
 
   res.json({
-
-    pesoDesejado:
-      peso
-
+    pesoDesejado: peso,
   });
-
 };
-
-
 
 // ===============================
 // AGENDAR
 // ===============================
 
 exports.agendar = async (
-
   req,
 
-  res
-
+  res,
 ) => {
+  const { hora, peso } = req.body;
 
-  const { hora, peso } =
-    req.body;
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
+  const agendamento = await alimentadorService.criarAgendamento(
+    hora,
 
-  const agendamento =
-    await alimentadorService
-      .criarAgendamento(
+    peso,
 
-        hora,
-
-        peso,
-
-        usuarioId
-
-      );
+    usuarioId,
+  );
 
   if (!agendamento) {
-
     return res.status(400).json({
-
-      erro: "Horário já existe"
-
+      erro: "Horário já existe",
     });
-
   }
 
   res.json({
+    mensagem: "Agendamento criado",
 
-    mensagem:
-      "Agendamento criado",
-
-    agendamento
-
+    agendamento,
   });
-
 };
-
-
 
 // ===============================
 // LISTAR AGENDAMENTOS
 // ===============================
 
-exports.listarAgendamentos =
-async (req, res) => {
+exports.listarAgendamentos = async (req, res) => {
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
-
-  const lista =
-    await alimentadorService
-      .listarAgendamentos(
-        usuarioId
-      );
+  const lista = await alimentadorService.listarAgendamentos(usuarioId);
 
   res.json({
-
-    agendamentos:
-      lista
-
+    agendamentos: lista,
   });
-
 };
-
-
 
 // ===============================
 // REMOVER AGENDAMENTO
 // ===============================
 
-exports.removerAgendamento =
-async (req, res) => {
+exports.removerAgendamento = async (req, res) => {
+  const { id } = req.params;
 
-  const { id } =
-    req.params;
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
+  const removido = await alimentadorService.removerAgendamento(
+    id,
 
-  const removido =
-    await alimentadorService
-      .removerAgendamento(
-
-        id,
-
-        usuarioId
-
-      );
+    usuarioId,
+  );
 
   if (!removido) {
-
     return res.status(404).json({
-
-      erro:
-        "Agendamento não encontrado"
-
+      erro: "Agendamento não encontrado",
     });
-
   }
 
   res.json({
-
-    mensagem:
-      "Agendamento removido"
-
+    mensagem: "Agendamento removido",
   });
-
 };
-
-
 
 // ===============================
 // EDITAR AGENDAMENTO
 // ===============================
 
-exports.editarAgendamento =
-async (req, res) => {
+exports.editarAgendamento = async (req, res) => {
+  const { id } = req.params;
 
-  const { id } =
-    req.params;
+  const { hora, peso } = req.body;
 
-  const { hora, peso } =
-    req.body;
+  const usuarioId = req.usuarioId;
 
-  const usuarioId =
-    req.usuarioId;
+  const resultado = await alimentadorService.editarAgendamento(
+    id,
 
-  const resultado =
-    await alimentadorService
-      .editarAgendamento(
+    hora,
 
-        id,
+    peso,
 
-        hora,
-
-        peso,
-
-        usuarioId
-
-      );
+    usuarioId,
+  );
 
   if (resultado === "duplicado") {
-
     return res.status(400).json({
-
-      erro:
-        "Horário já existe"
-
+      erro: "Horário já existe",
     });
-
   }
 
   if (!resultado) {
-
     return res.status(404).json({
-
-      erro:
-        "Agendamento não encontrado"
-
+      erro: "Agendamento não encontrado",
     });
-
   }
 
   res.json({
+    mensagem: "Agendamento atualizado",
 
-    mensagem:
-      "Agendamento atualizado",
-
-    agendamento:
-      resultado
-
+    agendamento: resultado,
   });
-
 };

@@ -319,6 +319,7 @@ setInterval(() => {
 
             console.log(`⏰ EXECUTADO: ${horaBanco}`);
             liberarRacao(qtdNecessaria);
+            await historicoModel.salvar(usuarioId, new Date().toLocaleDateString("pt-BR"), qtdNecessaria, pesoAtual, pesoDesejado);
 
             ultimoExecutado[id] = horarioAtual;
           }
