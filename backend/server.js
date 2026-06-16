@@ -1,49 +1,45 @@
-const connection = require("./db");
+require("dotenv").config();
 
-function initDb() {
-  const queries = [
-    `CREATE TABLE IF NOT EXISTS usuarios (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      nome VARCHAR(100) NOT NULL,
-      email VARCHAR(150) NOT NULL UNIQUE,
-      senha VARCHAR(255) NOT NULL,
-      nome_pet VARCHAR(100) NOT NULL,
-      criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`,
+const express = require("express");
+const cors = require("cors");
 
-    `CREATE TABLE IF NOT EXISTS agendamentos (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      usuario_id INT NOT NULL,
-      hora TIME NOT NULL,
-      peso_desejado INT NOT NULL,
-      criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        ON DELETE CASCADE
-    )`,
+const connection = require("./src/config/db");
+const initDb = require("./src/config/initDb");
 
-    `CREATE TABLE IF NOT EXISTS historico (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      usuario_id INT NOT NULL,
-      data DATETIME NOT NULL,
-      quantidade INT NOT NULL,
-      peso_antes INT DEFAULT 0,
-      peso_desejado INT DEFAULT 0,
-      criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-        ON DELETE CASCADE
-    )`,
-  ];
+const mqttClient = require("./src/config/mqtt");
 
-  queries.forEach((sql) => {
-    connection.query(sql, (err) => {
-      if (err) {
-        console.error("Erro ao criar tabela:", err);
-        return;
-      }
+const alimentadorRoutes = require("./src/routes/alimentadorRoutes");
+const usuarioRoutes = require("./src/routes/usuarioRoutes");
+const dashboardRoutes = require("./src/routes/dashboardRoutes");
+const iaRoutes = require("./src/routes/iaRoutes");
 
-      console.log("✅ Tabela verificada/criada");
-    });
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use("/api", usuarioRoutes);
+app.use("/api", alimentadorRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/ia", iaRoutes);
+
+app.get("/", (req, res) => {
+  res.send("API PetFeeder online!");
+});
+
+const PORT = process.env.PORT || 3000;
+
+connection.connect((err) => {
+  if (err) {
+    console.error("Erro ao conectar ao MySQL:", err);
+    return;
+  }
+
+  console.log("✅ Conectado ao MySQL!");
+
+  initDb();
+
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
   });
-}
-
-module.exports = initDb;
+});

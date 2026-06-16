@@ -1,4 +1,4 @@
-const connection = require("./db");
+const connection = require("./src/config/db");
 
 function initDb() {
   const queries = [
